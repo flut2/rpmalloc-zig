@@ -220,19 +220,27 @@ pub fn allocator() Allocator {
         .ptr = undefined,
         .vtable = &.{
             .alloc = struct {
-                fn alloc(_: *anyopaque, len: usize, log2_align: u8, _: usize) ?[*]u8 {
+                fn alloc(_: *anyopaque, len: usize, alignment: std.mem.Alignment, _: usize) ?[*]u8 {
                     assert(len > 0);
-                    return @ptrCast(c.rpaligned_alloc(@as(u32, 1) << @as(u5, @intCast(log2_align)), len));
+                    return @ptrCast(c.rpaligned_alloc(alignment.toByteUnits(), len));
                 }
             }.alloc,
             .resize = struct {
-                fn resize(_: *anyopaque, buf: []u8, _: u8, new_len: usize, _: usize) bool {
+                fn resize(_: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, _: usize) bool {
                     if (new_len <= buf.len) return true;
-                    return new_len <= c.rpmalloc_usable_size(buf.ptr);
+                    const grow_or_fail = 2;
+                    return c.rpaligned_realloc(buf.ptr, alignment.toByteUnits(), new_len, buf.len, grow_or_fail) != null;
                 }
             }.resize,
+            .remap = struct {
+                fn remap(_: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, _: usize) ?[*]u8 {
+                    if (new_len <= buf.len) return null;
+                    const no_flags = 0;
+                    return @ptrCast(c.rpaligned_realloc(buf.ptr, alignment.toByteUnits(), new_len, buf.len, no_flags));
+                }
+            }.remap,
             .free = struct {
-                fn free(_: *anyopaque, buf: []u8, _: u8, _: usize) void {
+                fn free(_: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
                     c.rpfree(buf.ptr);
                 }
             }.free,
