@@ -1,5 +1,5 @@
 .{
-    .name = "rpmalloc-zig",
+    .name = .rpmalloc_zig,
     .version = "1.0.0",
     .paths = .{
         "build.zig",
@@ -11,7 +11,7 @@
     .dependencies = .{
         .rpmalloc = .{
             .url = "git+https://github.com/mjansson/rpmalloc.git#60d76b7eb8f1547848a328664fc7be4647332ac7",
-            .hash = "122083b88a16ef444504a1f444d34c0cdb634b664c69622a3df8b218ccadfcb937c6",
+            .hash = "N-V-__8AACKwBQCDuIoW70RFBKH0RNNMDNtjS2ZMaWIqPfiy",
         },
     },
 }

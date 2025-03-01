@@ -30,12 +30,21 @@ pub fn build(b: *std.Build) void {
         "enable_validate_args",
         "Enable validation of args to public entry points",
     ) orelse false;
+    const enable_first_class_heaps = b.option(
+        bool,
+        "enable_first_class_heaps",
+        "Enable the first class heap functionality",
+    ) orelse false;
 
     const rpmalloc_mod = b.addModule("rpmalloc", .{
         .root_source_file = b.path("rpmalloc.zig"),
         .target = target,
         .optimize = optimize,
     });
+    
+    var options = b.addOptions();
+    options.addOption(bool, "enable_first_class_heaps", enable_first_class_heaps);
+    rpmalloc_mod.addOptions("options", options);
 
     const rpmalloc_dep = b.dependency("rpmalloc", .{});
     rpmalloc_mod.addIncludePath(rpmalloc_dep.path("rpmalloc"));
@@ -69,6 +78,7 @@ pub fn build(b: *std.Build) void {
         .{ "ENABLE_DECOMMIT", enable_decommit },
         .{ "ENABLE_UNMAP", enable_unmap },
         .{ "ENABLE_VALIDATE_ARGS", enable_validate_args },
+        .{ "RPMALLOC_FIRST_CLASS_HEAPS", enable_first_class_heaps },
     }) |define| rpmalloc.root_module.addCMacro(define[0], if (define[1]) "1" else "0");
 
     b.installArtifact(rpmalloc);
